@@ -1,17 +1,25 @@
 import asyncio
+import logging
+
 from aiogram import Bot, Dispatcher
 
-from token_bot import TOKEN
-from hendlers import router
+from handlers.handlers import router
+
+from config import TOKEN
+
 
 async def main():
-    bot = Bot(TOKEN)
-    dp = Dispatcher()
-    dp.include_router(router)
-    await dp.start_polling(bot)
+    """Точка входа для запуска Telegram-бота."""
+    bot = Bot(token=TOKEN)
+    dispatcher = Dispatcher()
+    dispatcher.include_router(router)
+
+    await dispatcher.start_polling(bot)
+
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("Exit.")
+        print("Exit")
