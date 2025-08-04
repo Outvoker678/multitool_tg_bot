@@ -21,8 +21,8 @@ class User(Base):
 # Модель для таблицы friends (промежуточная таблица)
 class Friend(Base):
     __tablename__ = "friends"
-    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"), primary_key=True)
-    friend_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    friend_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
 
 # Асинхронная функция для создания таблиц
 async def async_main():

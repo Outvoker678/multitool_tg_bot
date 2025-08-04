@@ -2,7 +2,13 @@ from aiogram import Router
 from aiogram.filters import CommandStart
 from aiogram.types import Message, CallbackQuery
 from aiogram import F
+from aiogram.types import FSInputFile
+import re
+import os
 
+router = Router()
+
+from service.tiktok import download_tiktok_video
 from keyboards.keyboard import start_keyboard, start_inl_keyboard
 
 router = Router()
@@ -33,15 +39,15 @@ async def requests_handlers(message: Message) -> None:
 
 
 @router.message(F.text == "Добавить друга")
-async def add_driends_handlers(message: Message) -> None:
-    """Обработчик "Мой ID"."""
+async def add_friends_handlers(message: Message) -> None:
+    """Обработчик "Добавить друга"."""
     await message.answer(
         f"<b>В разработке</b>",
         parse_mode="HTML")
 
 
 @router.callback_query(F.data == "help_add_friends")
-async def add_driends_handlers(callback: CallbackQuery) -> None:
+async def my_id(callback: CallbackQuery) -> None:
     """Обработчик "Мой ID"."""
     await callback.answer("")
     await callback.message.edit_text(
@@ -54,15 +60,46 @@ async def add_driends_handlers(callback: CallbackQuery) -> None:
         parse_mode="HTML")
 
 
-@router.message(CommandStart)
+@router.message(CommandStart())
 async def start_handlers(message: Message) -> None:
     """Обработчик команды /start."""
     await message.answer(
         "<b>👋 Привет! Я бот Multi Tool.</b>\n\n"
         "Я могу:\n"
-        "<b>• Скачивать видео из TikTok</b>\n"
+        "<b>• Скачивать клипы из TikTok</b>\n"
+        "<b>• Скачивать видео из YouTube</b>\n"
         "<b>• Скачивать музыку из Spotify</b>\n\n"
         "<i>Для этого просто отправьте мне ссылку — и я всё загружу!</i>\n\n",
         parse_mode="HTML", reply_markup=start_keyboard)
     await message.answer("Также я могу отправлять их вашим друзьям.\n",
                          reply_markup=start_inl_keyboard)
+
+
+
+
+
+# Более простая регулярка: просто ссылки, начинающиеся с нужного домена
+TIKTOK_URL_REGEX = re.compile(r"^https://(vm\.)?tiktok\.com")
+
+@router.message(F.text.regexp(TIKTOK_URL_REGEX))
+async def handle_tiktok_link(message: Message):
+    url = message.text.strip()
+    await message.answer("⏳ Проверяю ссылку и скачиваю видео...")
+
+    filepath = None
+    try:
+        filepath = await download_tiktok_video(url)
+
+        if filepath is None:
+            await message.answer("❌ Не удалось скачать видео. Возможно, ссылка нерабочая.")
+            return
+
+        video_file = FSInputFile(filepath)
+        await message.answer_video(video=video_file)
+
+    except Exception as e:
+        await message.answer(f"❌ Произошла ошибка: {e}")
+
+    finally:
+        if filepath and os.path.exists(filepath):
+            os.remove(filepath)
