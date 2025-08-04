@@ -8,7 +8,7 @@ import os
 
 router = Router()
 
-from service.tiktok import download_tiktok_video
+from service.video import download_video
 from keyboards.keyboard import start_keyboard, start_inl_keyboard
 
 router = Router()
@@ -78,17 +78,21 @@ async def start_handlers(message: Message) -> None:
 
 
 
-# Более простая регулярка: просто ссылки, начинающиеся с нужного домена
-TIKTOK_URL_REGEX = re.compile(r"^https://(vm\.)?tiktok\.com")
+# Ссылка должна содержать tiktok.com, vm.tiktok.com или youtube.com, youtu.be
+VIDEO_URL_REGEX = re.compile(
+    r"(https://)?(www\.)?(vm\.)?tiktok\.com/|"
+    r"(https://)?(www\.)?youtube\.com/|"
+    r"(https://)?(www\.)?youtu\.be/"
+)
 
-@router.message(F.text.regexp(TIKTOK_URL_REGEX))
-async def handle_tiktok_link(message: Message):
+@router.message(F.text.regexp(VIDEO_URL_REGEX))
+async def handle_video_link(message: Message):
     url = message.text.strip()
     await message.answer("⏳ Проверяю ссылку и скачиваю видео...")
 
     filepath = None
     try:
-        filepath = await download_tiktok_video(url)
+        filepath = await download_video(url)
 
         if filepath is None:
             await message.answer("❌ Не удалось скачать видео. Возможно, ссылка нерабочая.")

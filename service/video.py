@@ -6,8 +6,8 @@ from pathlib import Path
 DOWNLOAD_DIR = Path("download")
 DOWNLOAD_DIR.mkdir(exist_ok=True)
 
-async def download_tiktok_video(url: str) -> str | None:
-    """Скачивает видео из TikTok и возвращает путь к файлу, либо None."""
+async def download_video(url: str) -> str | None:
+    """Скачивает видео по ссылке (TikTok, YouTube и др.) и возвращает путь к файлу, либо None."""
     date_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     output_path = DOWNLOAD_DIR / f"{date_str}.mp4"
 
@@ -21,7 +21,7 @@ async def download_tiktok_video(url: str) -> str | None:
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            result = ydl.download([url])
+            ydl.download([url])
         return str(output_path) if output_path.exists() else None
     except Exception:
         return None
